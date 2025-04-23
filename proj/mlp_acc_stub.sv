@@ -1,4 +1,4 @@
-module mlp_accelerator #(
+module mlp_accelerator_stub #(
     parameter integer IN_WIDTH   = 32,         // Float width
     parameter integer POS_DIM    = 63,         // Encoded position dims
     parameter integer DIR_DIM    = 27,         // Encoded direction dims
