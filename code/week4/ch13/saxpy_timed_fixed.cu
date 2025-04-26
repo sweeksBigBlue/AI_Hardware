@@ -9,7 +9,7 @@ __global__ void saxpy(int n, float a, float *x, float *y) {
 
 int main(void) {
     // Sweep N from 2^16 to 2^30
-    for (int exp = 16; exp <= 30; exp++) {
+    for (int exp = 16; exp <= 29; exp++) {
         unsigned long long N = 1ULL << exp;
         float *x = nullptr, *y = nullptr, *d_x = nullptr, *d_y = nullptr;
         
