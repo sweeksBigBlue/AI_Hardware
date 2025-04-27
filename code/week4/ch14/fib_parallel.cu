@@ -1,9 +1,8 @@
-// fib_cuda.cu
+// fib_benchmark.cu
 #include <stdio.h>
 #include <stdlib.h>
 #include <cuda_runtime.h>
 
-#define N (1 << 20)  // 2^20 = 1048576 elements
 #define CSV_FILENAME "fib_timing_results.csv"
 
 __device__ unsigned long long fibonacci(int n) {
@@ -24,29 +23,39 @@ __global__ void fibonacci_kernel(int *input, unsigned long long *output, int n) 
     }
 }
 
-int main() {
-    int *h_input;
-    unsigned long long *h_output;
-    int *d_input;
-    unsigned long long *d_output;
+void run_fibonacci(int n, FILE* fp) {
+    int *h_input = nullptr;
+    unsigned long long *h_output = nullptr;
+    int *d_input = nullptr;
+    unsigned long long *d_output = nullptr;
 
-    size_t input_size = N * sizeof(int);
-    size_t output_size = N * sizeof(unsigned long long);
+    size_t input_size = n * sizeof(int);
+    size_t output_size = n * sizeof(unsigned long long);
 
-    // Allocate host memory
     h_input = (int *)malloc(input_size);
     h_output = (unsigned long long *)malloc(output_size);
 
-    // Initialize input (limit to avoid overflow)
-    for (int i = 0; i < N; ++i) {
-        h_input[i] = i % 50;
+    if (!h_input || !h_output) {
+        printf("Host memory allocation failed for N = %d\n", n);
+        return;
     }
 
-    // Allocate device memory
+    // Initialize input
+    for (int i = 0; i < n; ++i) {
+        h_input[i] = i % 50;  // Limit Fibonacci input to prevent overflow
+    }
+
     cudaMalloc((void **)&d_input, input_size);
     cudaMalloc((void **)&d_output, output_size);
 
-    // Create timing events
+    if (!d_input || !d_output) {
+        printf("Device memory allocation failed for N = %d\n", n);
+        free(h_input);
+        free(h_output);
+        return;
+    }
+
+    // Timing events
     cudaEvent_t start_total, stop_total;
     cudaEvent_t start_h2d, stop_h2d;
     cudaEvent_t start_kernel, stop_kernel;
@@ -61,62 +70,49 @@ int main() {
     cudaEventCreate(&start_d2h);
     cudaEventCreate(&stop_d2h);
 
+    // Start total timer
     cudaEventRecord(start_total);
 
-    // Host to Device Copy
+    // Host to Device
     cudaEventRecord(start_h2d);
     cudaMemcpy(d_input, h_input, input_size, cudaMemcpyHostToDevice);
     cudaEventRecord(stop_h2d);
 
-    // Kernel Launch
+    // Launch kernel
     int threads_per_block = 256;
-    int blocks_per_grid = (N + threads_per_block - 1) / threads_per_block;
+    int blocks_per_grid = (n + threads_per_block - 1) / threads_per_block;
     cudaEventRecord(start_kernel);
-    fibonacci_kernel<<<blocks_per_grid, threads_per_block>>>(d_input, d_output, N);
+    fibonacci_kernel<<<blocks_per_grid, threads_per_block>>>(d_input, d_output, n);
     cudaEventRecord(stop_kernel);
 
-    // Device to Host Copy
+    // Device to Host
     cudaEventRecord(start_d2h);
     cudaMemcpy(h_output, d_output, output_size, cudaMemcpyDeviceToHost);
     cudaEventRecord(stop_d2h);
 
+    // Stop total timer
     cudaEventRecord(stop_total);
 
-    // Synchronize
+    // Wait for all events to complete
     cudaEventSynchronize(stop_total);
 
-    // Measure times
+    // Measure elapsed times
     float time_total = 0, time_h2d = 0, time_kernel = 0, time_d2h = 0;
     cudaEventElapsedTime(&time_total, start_total, stop_total);
     cudaEventElapsedTime(&time_h2d, start_h2d, stop_h2d);
     cudaEventElapsedTime(&time_kernel, start_kernel, stop_kernel);
     cudaEventElapsedTime(&time_d2h, start_d2h, stop_d2h);
 
-    // Print timing results
-    printf("=== Timing results (N = %d) ===\n", N);
-    printf("Total time          : %.4f ms\n", time_total);
-    printf("Host to Device time : %.4f ms\n", time_h2d);
-    printf("Kernel execution    : %.4f ms\n", time_kernel);
-    printf("Device to Host time : %.4f ms\n", time_d2h);
+    // Log timing to console
+    printf("N = %d: Host2Device = %.6f ms, Kernel = %.6f ms, Device2Host = %.6f ms, Total = %.6f ms\n",
+        n, time_h2d, time_kernel, time_d2h, time_total);
 
-    // Save to CSV
-    FILE *fp = fopen(CSV_FILENAME, "w");
+    // Write to CSV
     if (fp != NULL) {
-        fprintf(fp, "N,HostToDevice (ms),Kernel (ms),DeviceToHost (ms),Total (ms)\n");
-        fprintf(fp, "%d,%.6f,%.6f,%.6f,%.6f\n", N, time_h2d, time_kernel, time_d2h, time_total);
-        fclose(fp);
-        printf("Timing data saved to %s\n", CSV_FILENAME);
-    } else {
-        printf("Failed to open file %s for writing.\n", CSV_FILENAME);
+        fprintf(fp, "%d,%.6f,%.6f,%.6f,%.6f\n", n, time_h2d, time_kernel, time_d2h, time_total);
     }
 
-    // Optionally check some results
-    printf("Sample output:\n");
-    for (int i = 0; i < 10; ++i) {
-        printf("Fib(%d) = %llu\n", h_input[i], h_output[i]);
-    }
-
-    // Clean up
+    // Cleanup
     free(h_input);
     free(h_output);
     cudaFree(d_input);
@@ -130,6 +126,29 @@ int main() {
     cudaEventDestroy(stop_kernel);
     cudaEventDestroy(start_d2h);
     cudaEventDestroy(stop_d2h);
+}
 
+int main() {
+    printf("Starting Fibonacci CUDA Benchmark...\n");
+
+    // Open CSV file
+    FILE *fp = fopen(CSV_FILENAME, "w");
+    if (fp == NULL) {
+        printf("Failed to open %s for writing.\n", CSV_FILENAME);
+        return -1;
+    }
+
+    // Write CSV header
+    fprintf(fp, "N,HostToDevice (ms),Kernel (ms),DeviceToHost (ms),Total (ms)\n");
+
+    // Sweep N from 2^3 to 2^20
+    for (int exp = 3; exp <= 20; ++exp) {
+        int n = 1 << exp;
+        run_fibonacci(n, fp);
+    }
+
+    fclose(fp);
+
+    printf("Benchmark complete. Timing data saved to %s\n", CSV_FILENAME);
     return 0;
 }
