@@ -19,8 +19,8 @@ module mlp_accelerator #(
     input  logic [IN_WIDTH-1:0]   load_data,         // Data for loading
     input  logic                  load_valid,        // Valid signal for loading
 
-    input  logic [IN_WIDTH-1:0]   pos_in [POS_DIM],
-    input  logic [IN_WIDTH-1:0]   dir_in [DIR_DIM],
+    input  wire [IN_WIDTH-1:0]   pos_in [POS_DIM],
+    input  wire [IN_WIDTH-1:0]   dir_in [DIR_DIM],
     input  logic                  in_valid,
     output logic                  in_ready,
 
@@ -50,6 +50,8 @@ module mlp_accelerator #(
 
   logic signed [IN_WIDTH-1:0] proj_weights [OUT_DIM][L2_UNITS + DIR_DIM];
   logic signed [IN_WIDTH-1:0] proj_bias [OUT_DIM];
+
+  logic signed [IN_WIDTH-1:0] acc;
 
   function logic signed [IN_WIDTH-1:0] relu(input logic signed [IN_WIDTH-1:0] x);
     return (x < 0) ? 0 : x;
@@ -101,7 +103,7 @@ module mlp_accelerator #(
   always_ff @(posedge clk) begin
     if (state == COMPUTE_L1) begin
       for (int u = 0; u < L1_UNITS; u++) begin
-        logic signed [IN_WIDTH-1:0] acc = layer1_bias[u];
+        acc <= layer1_bias[u];
         for (int i = 0; i < POS_DIM; i++) begin
           acc += (layer1_weights[u][i] * pos_reg[i]);
         end
@@ -115,7 +117,7 @@ module mlp_accelerator #(
   always_ff @(posedge clk) begin
     if (state == COMPUTE_L2) begin
       for (int u = 0; u < L2_UNITS; u++) begin
-        logic signed [IN_WIDTH-1:0] acc = layer2_bias[u];
+        acc <= layer2_bias[u];
         for (int i = 0; i < L1_UNITS; i++) begin
           acc += (layer2_weights[u][i] * layer1_out[i]);
         end
@@ -129,7 +131,7 @@ module mlp_accelerator #(
   always_ff @(posedge clk) begin
     if (state == COMPUTE_PROJ) begin
       for (int o = 0; o < OUT_DIM; o++) begin
-        logic signed [IN_WIDTH-1:0] acc = proj_bias[o];
+        acc <= proj_bias[o];
         for (int i = 0; i < L2_UNITS; i++) acc += proj_weights[o][i] * layer2_out[i];
         for (int j = 0; j < DIR_DIM; j++) acc += proj_weights[o][L2_UNITS + j] * dir_reg[j];
 
