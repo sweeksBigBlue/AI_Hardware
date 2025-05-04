@@ -1,14 +1,15 @@
 #include <iostream>
+#include <fstream>
+#include <iomanip>
 #include <cstdlib>
 #include <cmath>
 #include <chrono>
-#include <fstream>
-#include <iomanip>
+#include <sys/stat.h>
 
 #define INPUT_NODES 4
 #define HIDDEN_NODES 5
 #define OUTPUT_NODES 1
-#define BATCH_SIZE 16  // You can scale this up
+#define BATCH_SIZE 16  // <== change this value for each run
 
 __device__ float relu(float x) {
     return x > 0.0f ? x : 0.0f;
@@ -32,9 +33,8 @@ __global__ void forward_pass_kernel(
 
     if (tid < HIDDEN_NODES) {
         float sum = 0.0f;
-        for (int i = 0; i < INPUT_NODES; ++i) {
+        for (int i = 0; i < INPUT_NODES; ++i)
             sum += input[i] * weights_input_hidden[tid * INPUT_NODES + i];
-        }
         sum += bias_hidden[tid];
         hidden_activations[tid] = relu(sum);
     }
@@ -43,12 +43,16 @@ __global__ void forward_pass_kernel(
 
     if (tid == 0) {
         float sum = 0.0f;
-        for (int i = 0; i < HIDDEN_NODES; ++i) {
+        for (int i = 0; i < HIDDEN_NODES; ++i)
             sum += hidden_activations[i] * weights_hidden_output[i];
-        }
         sum += *bias_output;
         *output = relu(sum);
     }
+}
+
+bool file_exists(const std::string& name) {
+    struct stat buffer;
+    return (stat(name.c_str(), &buffer) == 0);
 }
 
 int main() {
@@ -72,7 +76,6 @@ int main() {
         h_bias_hidden[i] = static_cast<float>(rand()) / RAND_MAX - 0.5f;
     }
 
-    // CUDA timing
     cudaEvent_t start, stop;
     float malloc_ms = 0, h2d_ms = 0, kernel_ms = 0, d2h_ms = 0, free_ms = 0;
     cudaEventCreate(&start);
@@ -136,7 +139,6 @@ int main() {
     auto total_end = clock::now();
     double total_time = std::chrono::duration<double, std::milli>(total_end - total_start).count();
 
-    // -------- PRINT RESULTS ----------
     std::cout << "MLP Output [first 5 values]: ";
     for (int i = 0; i < std::min(5, BATCH_SIZE); ++i)
         std::cout << h_outputs[i] << " ";
@@ -149,9 +151,14 @@ int main() {
     std::cout << "------------------------------\n";
     std::cout << "Total Execution Time  : " << total_time << " ms\n";
 
-    // -------- CSV OUTPUT ----------
-    std::ofstream csv("mlp_timing_log.csv", std::ios::out);
-    csv << "Batch,Malloc,H2D,Kernel,D2H,Free,Total\n";
+    // -------- CSV APPEND ----------
+    std::string filename = "mlp_timing_log.csv";
+    bool exists = file_exists(filename);
+
+    std::ofstream csv(filename, std::ios::app);
+    if (!exists) {
+        csv << "Batch,Malloc,H2D,Kernel,D2H,Free,Total\n";
+    }
     csv << BATCH_SIZE << ","
         << std::fixed << std::setprecision(6)
         << malloc_ms << ","
