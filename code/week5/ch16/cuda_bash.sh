@@ -4,7 +4,7 @@
 BATCH_SIZES=(1 2 4 8 16 32 64)
 
 # Path to source file
-BASE_SRC="mlp_cuda_batched.cu"
+BASE_SRC="mlp.cu"
 TMP_SRC="mlp_tmp.cu"
 EXE="mlp_cuda_batched"
 
