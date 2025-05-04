@@ -4,7 +4,7 @@
 BATCH_SIZES=(1 2 4 8 16 32 64)
 
 # CUDA source and output files
-SRC="mlp_cuda_batched.cu"
+SRC="mlp.cu"
 EXE="mlp_cuda_batched"
 CSV="mlp_timing_log.csv"
 
