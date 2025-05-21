@@ -1,0 +1,4 @@
+layer,input_dim,output_dim,batch_size,dac_latency_ns,crossbar_latency_ns,adc_latency_ns,total_latency_ns,dac_energy_pj,crossbar_energy_pj,adc_energy_pj,total_energy_pj
+1,84,256,8,4.0,2.0,10.0,16.0,67.2,1809.92,1024.0,2901.12
+2,256,256,8,4.0,2.0,10.0,16.0,204.8,5515.946666666667,1024.0,6744.746666666667
+3,256,4,8,4.0,2.0,10.0,16.0,204.8,86.18666666666667,16.0,306.9866666666667
