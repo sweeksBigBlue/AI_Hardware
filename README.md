@@ -24,3 +24,5 @@ like an occulus while maintaining acceptable power and data integrity. NeRF allo
 rotated and expanded and what presented in 2020 by Google researchers. This could open major possibilities in visualization education in chemstry, mathematics,
 physics, history, and other subjects where visual information can help improve understanding. My goal is to use an analog simulation results to prove out the
 possibility of an analog solution for a NeRF DSP acceleration chiplet.
+
+<iframe width="560" height="315" src="https://www.youtube.com/embed/JuH79E8rdKc?si=usADWlm-zwdjTPDi" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
