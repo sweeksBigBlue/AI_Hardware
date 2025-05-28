@@ -25,4 +25,4 @@ rotated and expanded and what presented in 2020 by Google researchers. This coul
 physics, history, and other subjects where visual information can help improve understanding. My goal is to use an analog simulation results to prove out the
 possibility of an analog solution for a NeRF DSP acceleration chiplet.
 
-[![NeRF Video](https://img.youtube.com/vi/YOUTUBE_VIDEO_ID_HERE/0.jpg)](https://www.youtube.com/watch?v=JuH79E8rdKc)
+[![NeRF Video](https://img.youtube.com/vi/JuH79E8rdKc/0.jpg)](https://www.youtube.com/watch?v=JuH79E8rdKc)
