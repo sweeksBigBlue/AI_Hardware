@@ -1,3 +1,10 @@
+"""
+simple_nerf_gpu.py
+
+Implements a basic NeRF pipeline using PyTorch with positional encoding,
+a multi-layer perceptron (MLP), and volume rendering. Designed to run on GPU
+if available. Includes a simple radial gradient rendering demo.
+"""
 
 import torch
 import torch.nn as nn
@@ -6,12 +13,24 @@ import matplotlib.pyplot as plt
 
 # -------- Positional Encoding --------
 class PositionalEncoding(nn.Module):
+    """
+    Applies positional encoding to input coordinates using sinusoidal functions.
+
+    :param num_freqs: Number of frequency bands.
+    :param include_input: Whether to include the raw input in the output.
+    """
     def __init__(self, num_freqs, include_input=True):
         super().__init__()
         self.include_input = include_input
         self.freq_bands = 2. ** torch.linspace(0, num_freqs - 1, num_freqs)
 
     def forward(self, x):
+        """
+        Applies positional encoding to the input tensor.
+
+        :param x: Tensor of shape (..., input_dim)
+        :return: Positional encoded tensor of shape (..., encoded_dim)
+        """
         out = [x] if self.include_input else []
         for freq in self.freq_bands:
             out.append(torch.sin(freq * x))
@@ -20,6 +39,13 @@ class PositionalEncoding(nn.Module):
 
 # -------- NeRF MLP --------
 class NeRF(nn.Module):
+    """
+    Neural Radiance Fields model consisting of positional encoding and
+    a multi-layer perceptron for RGB + density prediction.
+
+    :param pos_dim: Number of frequency bands for positional encoding of input points.
+    :param dir_dim: Number of frequency bands for encoding view directions.
+    """
     def __init__(self, pos_dim=10, dir_dim=4):
         super().__init__()
         self.pos_enc = PositionalEncoding(pos_dim)
@@ -38,6 +64,13 @@ class NeRF(nn.Module):
         )
 
     def forward(self, x, d):
+        """
+        Forward pass through the NeRF model.
+
+        :param x: Sampled 3D positions (N, 3)
+        :param d: View directions (N, 3)
+        :return: Concatenated RGB and density (N, 4)
+        """
         x_encoded = self.pos_enc(x)
         d_encoded = self.dir_enc(d)
         h = self.fc_pos(x_encoded)
@@ -49,6 +82,13 @@ class NeRF(nn.Module):
 
 # -------- Volume Rendering --------
 def volume_rendering(rgb_sigma, z_vals):
+    """
+    Performs alpha compositing-based volume rendering of predicted RGB and density.
+
+    :param rgb_sigma: Tensor of shape (N, S, 4) containing RGB and sigma values.
+    :param z_vals: Tensor of shape (N, S) containing sample depths.
+    :return: Rendered RGB map of shape (N, 3)
+    """
     dists = z_vals[..., 1:] - z_vals[..., :-1]
     dists = torch.cat([dists, 1e10 * torch.ones_like(dists[..., :1])], -1)
     rgb = torch.sigmoid(rgb_sigma[..., :3])
@@ -60,6 +100,12 @@ def volume_rendering(rgb_sigma, z_vals):
 
 # -------- Training --------
 def train_nerf():
+    """
+    Trains a simple NeRF model on a radial gradient field.
+
+    This demo simulates rays in a 32x32 grid, assigns RGB targets based on radial
+    distance, and trains the NeRF model using MSE loss and volume rendering.
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 
@@ -68,7 +114,6 @@ def train_nerf():
     rays_o = torch.stack([i, j, torch.zeros_like(i)], dim=-1).reshape(-1, 3).to(device)
     rays_d = torch.tensor([0, 0, 1.0], device=device).expand(H * W, 3)
 
-    # Structured function: target RGB is a radial gradient
     coords = rays_o[:, :2]
     radius = torch.sqrt((coords ** 2).sum(dim=-1, keepdim=True))
     target_rgb = torch.sigmoid(10 * (1 - radius)).expand(-1, 3).to(device)
@@ -100,4 +145,3 @@ def train_nerf():
 
 if __name__ == "__main__":
     train_nerf()
-

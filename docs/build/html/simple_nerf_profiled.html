@@ -31,8 +31,107 @@
 
           <div class="body" role="main">
             
-  <section id="simple-nerf-profiled-module">
-<h1>simple_nerf_profiled module<a class="headerlink" href="#simple-nerf-profiled-module" title="Link to this heading">¶</a></h1>
+  <section id="module-simple_nerf_profiled">
+<span id="simple-nerf-profiled-module"></span><h1>simple_nerf_profiled module<a class="headerlink" href="#module-simple_nerf_profiled" title="Link to this heading">¶</a></h1>
+<p>simple_nerf_profiled.py</p>
+<p>This script implements a NeRF training loop with PyTorch’s built-in profiler
+to measure CPU and CUDA execution time, memory usage, and operator shapes.</p>
+<p>Includes:
+- Positional encoding
+- NeRF MLP model
+- Volume rendering function
+- Profiling-enabled training loop</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simple_nerf_profiled.NeRF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simple_nerf_profiled.</span></span><span class="sig-name descname"><span class="pre">NeRF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_profiled.html#NeRF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_profiled.NeRF" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Neural Radiance Fields (NeRF) network composed of two branches:
+- One for predicting density from position.
+- One for predicting RGB from direction and intermediate features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_dim</strong> – Positional encoding frequency count for position.</p></li>
+<li><p><strong>dir_dim</strong> – Positional encoding frequency count for direction.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simple_nerf_profiled.NeRF.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_profiled.html#NeRF.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_profiled.NeRF.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Forward pass through NeRF model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Input sample positions, shape (N, 3)</p></li>
+<li><p><strong>d</strong> – Input view directions, shape (N, 3)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Tensor of shape (N, 4), [RGB (3), sigma (1)]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simple_nerf_profiled.PositionalEncoding">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simple_nerf_profiled.</span></span><span class="sig-name descname"><span class="pre">PositionalEncoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_freqs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_profiled.html#PositionalEncoding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_profiled.PositionalEncoding" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Positional encoding using sinusoidal basis functions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_freqs</strong> – Number of frequency bands.</p></li>
+<li><p><strong>include_input</strong> – If True, includes original input in encoded output.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simple_nerf_profiled.PositionalEncoding.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_profiled.html#PositionalEncoding.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_profiled.PositionalEncoding.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Applies sinusoidal encoding to input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> – Tensor of shape (…, input_dim)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Encoded tensor of shape (…, encoded_dim)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simple_nerf_profiled.train_nerf">
+<span class="sig-prename descclassname"><span class="pre">simple_nerf_profiled.</span></span><span class="sig-name descname"><span class="pre">train_nerf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_profiled.html#train_nerf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_profiled.train_nerf" title="Link to this definition">¶</a></dt>
+<dd><p>Trains a NeRF model while profiling with PyTorch’s profiler.</p>
+<p>Logs:
+- CUDA and CPU time
+- Memory usage
+- Operator call stack</p>
+<p>Prints the top 10 CUDA-time-consuming operations.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simple_nerf_profiled.volume_rendering">
+<span class="sig-prename descclassname"><span class="pre">simple_nerf_profiled.</span></span><span class="sig-name descname"><span class="pre">volume_rendering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb_sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_vals</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_profiled.html#volume_rendering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_profiled.volume_rendering" title="Link to this definition">¶</a></dt>
+<dd><p>Performs volume rendering using alpha compositing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rgb_sigma</strong> – Tensor of shape (N, S, 4), where 4 = [R,G,B,sigma]</p></li>
+<li><p><strong>z_vals</strong> – Tensor of shape (N, S), depth values for each sample.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Rendered RGB map, shape (N, 3)</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -61,6 +160,10 @@
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">sw</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>

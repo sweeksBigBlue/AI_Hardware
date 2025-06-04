@@ -1,3 +1,10 @@
+"""
+simple_nerf_timed.py
+
+Implements a timing benchmark for training a Neural Radiance Fields (NeRF) model
+using PyTorch. Uses positional encoding, MLP architecture, volume rendering, and
+measures total runtime for a fixed number of steps on GPU or CPU.
+"""
 
 import torch
 import torch.nn as nn
@@ -7,12 +14,24 @@ import time
 
 # -------- Positional Encoding --------
 class PositionalEncoding(nn.Module):
+    """
+    Sinusoidal positional encoding module.
+
+    :param num_freqs: Number of frequency bands.
+    :param include_input: Whether to include original input in encoding.
+    """
     def __init__(self, num_freqs, include_input=True):
         super().__init__()
         self.include_input = include_input
         self.freq_bands = 2. ** torch.linspace(0, num_freqs - 1, num_freqs)
 
     def forward(self, x):
+        """
+        Apply encoding to the input tensor.
+
+        :param x: Input tensor of shape (..., input_dim)
+        :return: Encoded tensor of shape (..., encoded_dim)
+        """
         out = [x] if self.include_input else []
         for freq in self.freq_bands:
             out.append(torch.sin(freq * x))
@@ -21,6 +40,13 @@ class PositionalEncoding(nn.Module):
 
 # -------- NeRF MLP --------
 class NeRF(nn.Module):
+    """
+    Neural Radiance Field model composed of two branches:
+    one for density and one for RGB based on direction and intermediate features.
+
+    :param pos_dim: Frequency bands for positional input encoding.
+    :param dir_dim: Frequency bands for direction input encoding.
+    """
     def __init__(self, pos_dim=10, dir_dim=4):
         super().__init__()
         self.pos_enc = PositionalEncoding(pos_dim)
@@ -39,6 +65,13 @@ class NeRF(nn.Module):
         )
 
     def forward(self, x, d):
+        """
+        Forward pass through the NeRF network.
+
+        :param x: Sample positions, shape (N, 3)
+        :param d: Viewing directions, shape (N, 3)
+        :return: RGB and density values, shape (N, 4)
+        """
         x_encoded = self.pos_enc(x)
         d_encoded = self.dir_enc(d)
         h = self.fc_pos(x_encoded)
@@ -50,17 +83,34 @@ class NeRF(nn.Module):
 
 # -------- Volume Rendering --------
 def volume_rendering(rgb_sigma, z_vals):
+    """
+    Performs alpha compositing to compute final pixel RGB values.
+
+    :param rgb_sigma: Tensor of shape (N, S, 4) [RGB, sigma]
+    :param z_vals: Tensor of shape (N, S) sample depths
+    :return: Rendered RGB image of shape (N, 3)
+    """
     dists = z_vals[..., 1:] - z_vals[..., :-1]
     dists = torch.cat([dists, 1e10 * torch.ones_like(dists[..., :1])], -1)
     rgb = torch.sigmoid(rgb_sigma[..., :3])
     sigma = torch.clamp(rgb_sigma[..., 3], 0.0, 1e3)
     alpha = 1. - torch.exp(-sigma * dists)
-    weights = alpha * torch.cumprod(torch.cat([torch.ones_like(alpha[..., :1]), 1. - alpha + 1e-10], -1), -1)[..., :-1]
+    weights = alpha * torch.cumprod(
+        torch.cat([torch.ones_like(alpha[..., :1]), 1. - alpha + 1e-10], -1),
+        -1
+    )[..., :-1]
     rgb_map = (weights[..., None] * rgb).sum(dim=-2)
     return rgb_map
 
 # -------- Training with Timing --------
 def train_nerf():
+    """
+    Trains a NeRF model and prints total execution time.
+
+    The function simulates a basic 32x32 ray field and trains a small NeRF
+    model using synthetic data (radial gradient). Total execution time is
+    printed in seconds.
+    """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
 

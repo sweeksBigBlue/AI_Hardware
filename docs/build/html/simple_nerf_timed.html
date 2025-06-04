@@ -31,8 +31,100 @@
 
           <div class="body" role="main">
             
-  <section id="simple-nerf-timed-module">
-<h1>simple_nerf_timed module<a class="headerlink" href="#simple-nerf-timed-module" title="Link to this heading">¶</a></h1>
+  <section id="module-simple_nerf_timed">
+<span id="simple-nerf-timed-module"></span><h1>simple_nerf_timed module<a class="headerlink" href="#module-simple_nerf_timed" title="Link to this heading">¶</a></h1>
+<p>simple_nerf_timed.py</p>
+<p>Implements a timing benchmark for training a Neural Radiance Fields (NeRF) model
+using PyTorch. Uses positional encoding, MLP architecture, volume rendering, and
+measures total runtime for a fixed number of steps on GPU or CPU.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="simple_nerf_timed.NeRF">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simple_nerf_timed.</span></span><span class="sig-name descname"><span class="pre">NeRF</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pos_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dir_dim</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_timed.html#NeRF"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_timed.NeRF" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Neural Radiance Field model composed of two branches:
+one for density and one for RGB based on direction and intermediate features.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos_dim</strong> – Frequency bands for positional input encoding.</p></li>
+<li><p><strong>dir_dim</strong> – Frequency bands for direction input encoding.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simple_nerf_timed.NeRF.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">d</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_timed.html#NeRF.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_timed.NeRF.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Forward pass through the NeRF network.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> – Sample positions, shape (N, 3)</p></li>
+<li><p><strong>d</strong> – Viewing directions, shape (N, 3)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>RGB and density values, shape (N, 4)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="simple_nerf_timed.PositionalEncoding">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">simple_nerf_timed.</span></span><span class="sig-name descname"><span class="pre">PositionalEncoding</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_freqs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">include_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_timed.html#PositionalEncoding"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_timed.PositionalEncoding" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code></p>
+<p>Sinusoidal positional encoding module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_freqs</strong> – Number of frequency bands.</p></li>
+<li><p><strong>include_input</strong> – Whether to include original input in encoding.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="simple_nerf_timed.PositionalEncoding.forward">
+<span class="sig-name descname"><span class="pre">forward</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_timed.html#PositionalEncoding.forward"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_timed.PositionalEncoding.forward" title="Link to this definition">¶</a></dt>
+<dd><p>Apply encoding to the input tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>x</strong> – Input tensor of shape (…, input_dim)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Encoded tensor of shape (…, encoded_dim)</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simple_nerf_timed.train_nerf">
+<span class="sig-prename descclassname"><span class="pre">simple_nerf_timed.</span></span><span class="sig-name descname"><span class="pre">train_nerf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_timed.html#train_nerf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_timed.train_nerf" title="Link to this definition">¶</a></dt>
+<dd><p>Trains a NeRF model and prints total execution time.</p>
+<p>The function simulates a basic 32x32 ray field and trains a small NeRF
+model using synthetic data (radial gradient). Total execution time is
+printed in seconds.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="simple_nerf_timed.volume_rendering">
+<span class="sig-prename descclassname"><span class="pre">simple_nerf_timed.</span></span><span class="sig-name descname"><span class="pre">volume_rendering</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rgb_sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z_vals</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/simple_nerf_timed.html#volume_rendering"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#simple_nerf_timed.volume_rendering" title="Link to this definition">¶</a></dt>
+<dd><p>Performs alpha compositing to compute final pixel RGB values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rgb_sigma</strong> – Tensor of shape (N, S, 4) [RGB, sigma]</p></li>
+<li><p><strong>z_vals</strong> – Tensor of shape (N, S) sample depths</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Rendered RGB image of shape (N, 3)</p>
+</dd>
+</dl>
+</dd></dl>
+
 </section>
 
 
@@ -61,6 +153,10 @@
     </div>
 </search>
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="modules.html">sw</a></li>
+</ul>
 
 <div class="relations">
 <h3>Related Topics</h3>

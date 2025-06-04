@@ -1,5 +1,5 @@
-simple\_nerf\_gpu module
-========================
+sw.simple\_nerf\_gpu module
+===========================
 
 .. automodule:: sw.simple_nerf_gpu
    :members:
