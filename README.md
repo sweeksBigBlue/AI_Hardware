@@ -26,3 +26,15 @@ physics, history, and other subjects where visual information can help improve u
 possibility of an analog solution for a NeRF DSP acceleration chiplet.
 
 [![NeRF Video](https://img.youtube.com/vi/JuH79E8rdKc/0.jpg)](https://www.youtube.com/watch?v=JuH79E8rdKc)
+
+## Getting Started
+
+For this project you need LTSpice, Python, and a python venv
+
+Creation of a venv can be found at this [link](https://docs.python.org/3/library/venv.html)
+
+Python libraries used are: pytorch, numpy, matplotlib, and pandas
+
+LTSpice can be run directly by loading the netlist into the simulator and clicking run. You can feed the log files for the latency tests into your simulator of your
+choice to gain feedback and analysis of the results. Using the graphing function in LTSpice can be found on the LTSpice documentation inside the application.
+
